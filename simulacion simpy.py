@@ -1,71 +1,70 @@
 import simpy
 import random
 import math
-# el proceso se tiene que crear esperando espacio de memoria disponible
-# luego de asignarle la memoria espera a que el procesador lo atienda
-# y tiene una anctidad de instruciones para realizar
-# EL CPU atiende el proceso por tiempo limitado para hacer 3 instrucciones
+#Fredy Velasquez - Mariana David
+
 
 # name: identificador del proceso
 # Ram_need: cantidad de ram necesitado
-# cant_inst: cantidad de instrucciones
+# cinstrucciones: cantidad de instrucciones
 
 
-def process(env, name, Ram_need, cant_inst, CPU, wait_time, RAM, tiempollegada):
-    global totaldia
-    totaldia = 0
-    yield env.timeout(tiempollegada)
-    llegada = env.now
-    run = True
-    while run:
+def process(env, name, Ram_need, cinstrucciones, CPU, wait_time, RAM, banderallegada):
+    global cuentafinal
+    cuentafinal = 0 #Inicio en 0
+    yield env.timeout(banderallegada)
+    llegada = env.now #Me indica que esta pasando en la actualidad
+    run = True #Para el while
+    while run: #While que corre todo
         yield RAM.get(Ram_need)
-        print(' %s esta listo para empezar, con un tiempo de %s, ram = %s' % (
-            name, env.now,  Ram_need))
-        while cant_inst > 0:
+        print(' %s esta listo para empezar - INICIANDO PROCESO, con un tiempo de %s, ram = %s' % (
+            name, env.now,  Ram_need)) #Imprimo mis params
+        while cinstrucciones > 0:
 
-            with CPU.request() as req:
+            with CPU.request() as req: #Tomado de los recursos simpy
 
                 yield req
                 yield env.timeout(1)
-                cant_inst = cant_inst - 3  # cantidad de instrucciones x unidad de tiempo
-                if(cant_inst < 0):
-                    cant_inst = 0
-                print(' %s Hace 3 procesos, con un tiempo de %s y queda con %s penientes' %
-                      (name, env.now, cant_inst))
-            # random por si se va aespera o vuelve al CPU
-            feo = random.randint(1, 2)
-            if(feo == 1):
-                with wait_time.request() as req:
-                    yield req
-                    yield env.timeout(1)
+                cinstrucciones = cinstrucciones - 3  # Valor de instrucciones por unidad de tiempo
+                if(cinstrucciones < 0):
+                    cinstrucciones = 0
+                print(' %s Hace 3 procesos, con un tiempo de %s y queda con %s estan en espera (pendientes)' %
+                      (name, env.now, cinstrucciones))
+            # En caso de ir a espera
+            irespera = random.randint(1, 2)
+            if(irespera == 1):
+                with wait_time.request() as req: #Tomado de los recursos simpy
+                    yield req #Return
+                    yield env.timeout(1) #Tiemp
                     print(' %s entra a espera, con un tiempo de %s' % (
                         name, env.now))
-        RAM.put(Ram_need)  # regresa la ram que uso este proceso
-        tiempo = env.now - llegada
+        RAM.put(Ram_need)  #Vuelve a RAM 
+        tiempo = env.now - llegada #Calculo el tiempo con el actual y con el de llegada
         print(' %s FINALIZADO, finaliza con un tiempo de %s' %
               (name, tiempo))
-        totaldia = totaldia + tiempo
+        cuentafinal = cuentafinal + tiempo #A la cuenta final anterior la suma la nueva ademas del tiempo
         run = False
 
+RAM = simpy.Container(env, init=100, capacity=100)  # Atributos basicos de la RAM
+env = simpy.Environment()  # Crea el ambiente de simulacion - 'linea de tiempo'
+CPU = simpy.Resource(env, capacity=1)  # cantidad de CPU'S
 
-env = simpy.Environment()  # crea el ambiente de simulacion
-RAM = simpy.Container(env, init=100, capacity=100)  # capacidad del RAM
-CPU = simpy.Resource(env, capacity=1)  # cantidad de CPUS
-# cantidad de colas para la espera a CPU
-wait = simpy.Resource(env, capacity=3)
-cantidadpro = 50  # cantidad de procesos
-random.seed(10)  # seed del random
+#------------COLA----------------#
+#Lista de esperas de la cola
+wait = simpy.Resource(env, capacity=3) #Capacidad de 3
+cantidadpro = 50  #Numero de procesos
+random.seed(10)  #Seed de Random
 
-for i in range(cantidadpro):
-    # cantidad de uinstrucciones x proceso
+for i in range(cantidadpro): #For con formulas respecticas
+    #Cantidad de Instrucciones por proceso
     Cantint = (random.randint(1, 10))
 
     Ram_need = (random.randint(1, 10))  # cantidad de ram x proceso
 
-    timepollega = (random.expovariate(1/10))
+    timepollega = (random.expovariate(1/10)) #Definir tiempo de llegada
 
-    env.process(process(env, 'Proceso %d' %
+    env.process(process(env, 'Proceso %d' %  #Round para reducir los decs
                         i, round(Ram_need), round(Cantint), CPU, wait, RAM, timepollega))
 
-env.run()
-print('Tiempo promedio ', totaldia/cantidadpro)
+env.run() #Ejecuto
+print('Tiempo promedio ', cuentafinal/cantidadpro) #Imprimo el tiempo promedio - Graficar - Este sera para cada proceso de la cola
