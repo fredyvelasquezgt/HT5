@@ -1,15 +1,17 @@
 import simpy
-import random
 import math
+import random
+
 #Fredy Velasquez - Mariana David
+#HT5
+#Estructuras de datos
 
 
-# name: identificador del proceso
-# Ram_need: cantidad de ram necesitado
-# cinstrucciones: cantidad de instrucciones
 
-
-def process(env, name, Ram_need, cinstrucciones, CPU, wait_time, RAM, banderallegada):
+def process(env, name, Ram_need, cinstrucciones, CPU, wait_time, RAM, banderallegada):                               
+# name - Proceso
+# Ram_need: Cuanto necesito de RAM
+# cinstrucciones: Numero de instrucciones
     global cuentafinal
     cuentafinal = 0 #Inicio en 0
     yield env.timeout(banderallegada)
@@ -19,20 +21,20 @@ def process(env, name, Ram_need, cinstrucciones, CPU, wait_time, RAM, banderalle
         yield RAM.get(Ram_need)
         print(' %s esta listo para empezar - INICIANDO PROCESO, con un tiempo de %s, ram = %s' % (
             name, env.now,  Ram_need)) #Imprimo mis params
-        while cinstrucciones > 0:
+        while cinstrucciones > 0: #Condicional para que verifique que si estoy usando instrucciones
 
             with CPU.request() as req: #Tomado de los recursos simpy
 
-                yield req
+                yield req #Return mi req
                 yield env.timeout(1)
                 cinstrucciones = cinstrucciones - 3  # Valor de instrucciones por unidad de tiempo
-                if(cinstrucciones < 0):
+                if(cinstrucciones < 0): #En caso de no tener instruccinoes
                     cinstrucciones = 0
                 print(' %s Hace 3 procesos, con un tiempo de %s y queda con %s estan en espera (pendientes)' %
                       (name, env.now, cinstrucciones))
             # En caso de ir a espera
-            irespera = random.randint(1, 2)
-            if(irespera == 1):
+            irespera = random.randint(1, 2) #Espera
+            if(irespera == 1): #Cuando ya estoy en espera
                 with wait_time.request() as req: #Tomado de los recursos simpy
                     yield req #Return
                     yield env.timeout(1) #Tiemp
@@ -52,16 +54,16 @@ CPU = simpy.Resource(env, capacity=1)  # cantidad de CPU'S
 #------------COLA----------------#
 #Lista de esperas de la cola
 wait = simpy.Resource(env, capacity=3) #Capacidad de 3
-cantidadpro = 50  #Numero de procesos
+cantidadpro = 50  #Numero de procesos - Graficar
 random.seed(10)  #Seed de Random
 
 for i in range(cantidadpro): #For con formulas respecticas
     #Cantidad de Instrucciones por proceso
-    Cantint = (random.randint(1, 10))
+    Cantint = (random.randint(1, 10)) - #Graficar
 
-    Ram_need = (random.randint(1, 10))  # cantidad de ram x proceso
+    Ram_need = (random.randint(1, 10))  # cantidad de ram x proceso 
 
-    timepollega = (random.expovariate(1/10)) #Definir tiempo de llegada
+    timepollega = (random.expovariate(1/10)) #Definir tiempo de llegada - Graficar
 
     env.process(process(env, 'Proceso %d' %  #Round para reducir los decs
                         i, round(Ram_need), round(Cantint), CPU, wait, RAM, timepollega))
